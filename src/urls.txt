@@ -1,0 +1,4 @@
+https://regex101.com/
+https://docs.python.org/3/this-url-will-404.html
+https://www.sbb.ch
+http://fr-cybersecurity.ch/
