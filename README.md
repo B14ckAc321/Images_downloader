@@ -1,6 +1,6 @@
-# concurp2-lab22
+# Scout Image Scraper
 
-Asynchronous image scraper script. See [Lab 22 Documentation](https://concurp2-lecture.kube.isc.heia-fr.ch/labs/lab22/)
+Asynchronous image scraper script
 
 ## How to Execute the Script
 
@@ -25,7 +25,7 @@ You can run the script using either Docker or Poetry. Follow the instructions be
 
 4. **Run the Docker container with additional options**:
     ```sh
-    docker run --rm -v $(pwd)/../images:/usr/app/images image_scraper --dest=../images/ --URLlist=urls.txt --nc
+    docker run --rm -v $(pwd)/../images:/usr/app/images image_scraper --dest=../images/ --URLlist="MY_URL.example"
     ```
 
 ### Using Poetry
@@ -47,10 +47,10 @@ You can run the script using either Docker or Poetry. Follow the instructions be
 
 4. **Run the script**:
     ```sh
-    python3 image_scraper.py
+    python3 scout_site_scraper.py
     ```
 
 5. **Run the script with additional options**:
     ```sh
-    python3 image_scraper.py --dest=../images/ --URLlist=urls.txt --nc
+    python3 scout_site_scraper.py --dest=../images/ --base_url="MY_URL.example"
     ```

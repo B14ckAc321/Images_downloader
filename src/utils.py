@@ -159,7 +159,7 @@ async def fetch_image(session, url):
 
 async def parse_image_urls(html, base_url):
     """
-    Parse image URLs from the HTML content.
+    Parse image URLs from the HTML content, excluding unwanted images.
 
     :param html: HTML content of the page
     :type html: str
@@ -170,11 +170,18 @@ async def parse_image_urls(html, base_url):
     """
     soup = BeautifulSoup(html, "html.parser")
     image_urls = []
+    unwanted_patterns = ['ajax_loader.gif']  # Add more patterns if needed
+
     for img in soup.find_all("img"):
         src = img.get("src")
         if src:
             full_url = urljoin(base_url, src)
+            # Skip unwanted images based on patterns
+            if any(pattern in full_url for pattern in unwanted_patterns):
+                logger.info(f"Skipped unwanted image URL: {full_url}")
+                continue
             image_urls.append(full_url)
+
     logger.info(f"Found {len(image_urls)} image URLs on {base_url}")
     return image_urls
 

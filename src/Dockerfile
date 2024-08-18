@@ -13,4 +13,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run the image scraper script when the container launches
-ENTRYPOINT ["python3", "image_scraper.py"]
+ENTRYPOINT ["python3", "scout_site_scraper.py"]

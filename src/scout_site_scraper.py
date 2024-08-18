@@ -47,7 +47,8 @@ async def fetch_album_urls(session, base_url):
 
 async def scrape_album_images_bfs(session, base_url, album_url, album_title, dest_dir, max_depth=2):
     """
-    Scrape images from albums using breadth-first search and save them to a designated folder.
+    Scrape images from albums using breadth-first search and save them to a designated folder,
+    handling pagination for albums that span multiple pages.
 
     :param session: Aiohttp client session
     :type session: aiohttp.ClientSession
@@ -79,16 +80,27 @@ async def scrape_album_images_bfs(session, base_url, album_url, album_title, des
         if not os.path.exists(album_dest_dir):
             os.makedirs(album_dest_dir)
 
-        redirected_url = await follow_redirect(session, full_album_url)
-        html = await fetch(session, redirected_url)
-        
-        if not html:
-            continue
+        while full_album_url:
+            redirected_url = await follow_redirect(session, full_album_url)
+            html = await fetch(session, redirected_url)
 
-        # Parse and download images in the current album
-        image_urls = await parse_image_urls(html, redirected_url)
-        tasks = [download_and_save_image(session, img_url, album_dest_dir, False) for img_url in image_urls]
-        await asyncio.gather(*tasks)
+            if not html:
+                # Log the issue and break the loop if HTML is not fetched
+                print(f"Failed to fetch HTML from {full_album_url}")
+                break
+
+            # Parse and download images in the current page of the album
+            image_urls = await parse_image_urls(html, redirected_url)
+            tasks = [download_and_save_image(session, img_url, album_dest_dir, False) for img_url in image_urls]
+            await asyncio.gather(*tasks)
+
+            # Find and queue the next page if available
+            soup = BeautifulSoup(html, 'html.parser')
+            next_page_link = soup.select_one('span.navPrevNext a[rel="next"]')  # Selector for the "Next" link
+            if next_page_link and next_page_link.get('href'):
+                full_album_url = os.path.join(base_url, next_page_link.get('href'))
+            else:
+                full_album_url = None
 
         # Avoid further processing if maximum depth is reached
         if current_depth >= max_depth:
@@ -101,6 +113,7 @@ async def scrape_album_images_bfs(session, base_url, album_url, album_title, des
             sub_album_url = sub_album_link.get('href')
             sub_album_title = sub_album_link.get_text(strip=True)
             queue.append((sub_album_url, sub_album_title, album_dest_dir, current_depth + 1))
+
 
 async def download_scout(dest_dir, base_url):
     """
@@ -124,8 +137,8 @@ def main():
     Main function to parse arguments and start the image scraping process.
     """
     parser = argparse.ArgumentParser(description="Asyncio Website Image Scraper for Albums")
-    parser.add_argument("--base_url", type=str, required=True, help="Base URL of the site")
-    parser.add_argument("--dest", type=str, default="./images", help="Destination directory for downloaded images")
+    parser.add_argument("--base_url", type=str, default="https://foto.scoutlocarno.ch/", help="Base URL of the site")
+    parser.add_argument("--dest", type=str, default="../images", help="Destination directory for downloaded images")
     args = parser.parse_args()
 
     asyncio.run(download_scout(args.dest, args.base_url))
